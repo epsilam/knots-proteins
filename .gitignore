@@ -1,0 +1,6 @@
+obj/
+bin/
+**/.ccls-cache
+*.swp
+*~
+errorlog.txt
