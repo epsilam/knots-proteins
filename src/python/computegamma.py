@@ -1,8 +1,10 @@
 import prody as pd
 import pylab as pl
+from matplotlib import collections  as mc
 import igraph as ig
 import numpy as np
 from scipy.linalg import expm
+
 
 class ProteinProjection:
                                          # angle1 and angle2 determine the 2d
@@ -50,10 +52,10 @@ class ProteinProjection:
                           # in a given projection using some
                           # simple linear algebra.
     def checkBondCrossing(self, resi1, resi2, resj1, resj2):
-        A = projectedResCoords[resi1]
-        B = projectedResCoords[resi2]
-        C = projectedResCoords[resj1]
-        D = projectedResCoords[resj2]
+        A = self.projectedResCoords[resi1]
+        B = self.projectedResCoords[resi2]
+        C = self.projectedResCoords[resj1]
+        D = self.projectedResCoords[resj2]
         E = C - A
         R = B - A
         S = D - C
@@ -62,22 +64,42 @@ class ProteinProjection:
         u = np.cross(E,R) / crossRS
         if crossRS != 0:
             if 0 <= t <= 1 and 0 <= u <= 1:
-                backboneCrossings[(resi1,resj1)] = A + t * R
+                self.backboneCrossings[(resi1,resj1)] = A + t * R
 
                           # for each pair of two successive residues (i.e., two
                           # residues with a peptide bond), check if there is a
                           # crossing with another
     def findBackboneCrossings(self):
-        for idx in range(len(self.resNums))-1:
-            resi1 = resNums[idx]
-            resi2 = resNums[idx+1]
-            for jdx in range(idx+1,len(self.resNums)-1):
-                resj1 = resNums[jdx]
-                resj2 = resNums[jdx+1]
-                checkBondCrossing(resi1,resi2,resj1,resj2)
+        for idx in range(len(self.resNums)-1):
+            resi1 = self.resNums[idx]
+            resi2 = self.resNums[idx+1]
+            for jdx in range(idx+2,len(self.resNums)-1):
+                resj1 = self.resNums[jdx]
+                resj2 = self.resNums[jdx+1]
+                self.checkBondCrossing(resi1,resi2,resj1,resj2)
 
+
+    def plotCrossings(self):
+        rc = []                      # plot backbone
+        for key,value in self.projectedResCoords.items():
+            rc.append(tuple(value))
+        lines = []
+        for i in range(len(rc)-1):
+            lines.append([rc[i],rc[i+1]])
+        lc = mc.LineCollection(lines, linewidths=2)
+        fig, ax = pl.subplots()
+        ax.add_collection(lc)
+        ax.autoscale()
+        ax.margins(0.1)
+
+        crossCoords = []                # plot crossings
+        for key,value in self.backboneCrossings.items():
+            crossCoords.append(value)
+        xCrossCoords, yCrossCoords = zip(*crossCoords)
+        ax.scatter(xCrossCoords,yCrossCoords, c=(1,0,0,1))
+        fig.show()
 
 
     def exportTangle(self): # exports crossings and H-vertices into a format
-                        # readable by Mathematica
+                            # readable by Mathematica
         pass
