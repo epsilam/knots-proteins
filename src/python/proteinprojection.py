@@ -44,19 +44,11 @@ class ProteinProjection:
             rot = np.dot(M1,np.dot(M2,self.resCoords[i]))
             self.projectedResCoords[i] = rot[0:2] # take the x,y coords
 
-                          # given two pairs (resi1,resi2) and (resj1,resj2)
-                          # of res nums, determine if the bond between resi1
-                          # and resi2 crosses the bond between resj1 and resj2
-                          # in a given projection using some
-                          # simple linear algebra.
-
-
         self.backboneCrossings = {}      # a dictionary containing crossings of
                                          # bonds on the backbone. the key
                                          # (i,i+1,j,j+1) is included if the bond
                                          # between i and i+1 crosses the bond
                                          # between j and j+1.
-
 
         self.proteinStructureBonds = set() # a set of pairs of residues which
                                            # are bonded via a non-peptide bond.
@@ -74,6 +66,11 @@ class ProteinProjection:
                                          # as above.
         self.structureCrossings = {}
 
+                          # given two pairs (resi1,resi2) and (resj1,resj2)
+                          # of res nums, determine if the bond between resi1
+                          # and resi2 crosses the bond between resj1 and resj2
+                          # in a given projection using some
+                          # simple linear algebra.
     def _checkBondCrossing(self, resi1, resi2, resj1, resj2, crossingDict):
         A = self.projectedResCoords[resi1]
         B = self.projectedResCoords[resi2]
