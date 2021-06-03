@@ -5,6 +5,7 @@ import igraph as ig
 import numpy as np
 from scipy.linalg import expm
 
+#
 
 class ProteinProjection:
                                          # angle1 and angle2 determine the 2d
@@ -15,9 +16,9 @@ class ProteinProjection:
 
         self.p = pd.parsePDB(proteinName)
         self.backbone = self.p.select('protein') # removes irrelevant structures
-                                            # (such as water molecules and
-                                            # carbohydrates) and leaves only
-                                            # the polymers
+                                            # (such as water molecules,
+                                            # carbohydrates, and ligands) and
+                                            # leaves only the polymers
 
 
         self.resNums = np.unique(self.backbone.getResnums())
@@ -154,7 +155,7 @@ class ProteinProjection:
         lines = []
         for i in range(len(rc)-1):
             lines.append((rc[i],rc[i+1]))
-        lc = mc.LineCollection(lines, linewidths=2, colors=[(0.2,0.8,0,1)])
+        lc = mc.LineCollection(lines, linewidths=2, colors=[(0.2,1,0,1)])
         ax.add_collection(lc)
 
         lines = []                  # plot secondary/tertiary structure bonds
@@ -162,7 +163,7 @@ class ProteinProjection:
             rc1 = tuple(self.projectedResCoords[bondedResPair[0]])
             rc2 = tuple(self.projectedResCoords[bondedResPair[1]])
             lines.append((rc1,rc2))
-        lc = mc.LineCollection(lines, linewidths=2, colors=[(0,0,1,0.3)])
+        lc = mc.LineCollection(lines, linewidths=2, colors=[(0,0,0,0.3)])
         ax.add_collection(lc)
 
         crossingDict = {}
@@ -180,6 +181,3 @@ class ProteinProjection:
         fig.show()
 
 
-    def exportTangle(self): # exports crossings and H-vertices into a format
-                            # readable by Mathematica
-        pass
