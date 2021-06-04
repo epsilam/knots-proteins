@@ -53,13 +53,12 @@ class ProteinProjection:
         self.proteinStructureBonds = set() # a set of pairs of residues which
                                            # are bonded via a non-peptide bond.
 
-                                         # crossings between a bond on the
+        self.structureWithBackboneCrossings = {} # crossings between a bond on
                                          # backbone (peptide) and a secondary/
                                          # tertiary structure bond.
                                          # the element (i1,i2,j1,j2) is included
                                          # if the bond between i1 and i2 crosses
                                          # the bond between j1 and j2
-        self.structureWithBackboneCrossings = {}
 
                                          # crossings between two secondary/
                                          # tertiary structure bonds. same format
@@ -152,7 +151,7 @@ class ProteinProjection:
         lines = []
         for i in range(len(rc)-1):
             lines.append((rc[i],rc[i+1]))
-        lc = mc.LineCollection(lines, linewidths=2, colors=[(0.2,1,0,1)])
+        lc = mc.LineCollection(lines, linewidths=2, colors=[(0.1,0.7,0.1,1)])
         ax.add_collection(lc)
 
         lines = []                  # plot secondary/tertiary structure bonds
@@ -160,7 +159,7 @@ class ProteinProjection:
             rc1 = tuple(self.projectedResCoords[bondedResPair[0]])
             rc2 = tuple(self.projectedResCoords[bondedResPair[1]])
             lines.append((rc1,rc2))
-        lc = mc.LineCollection(lines, linewidths=2, colors=[(0,0,0,0.3)])
+        lc = mc.LineCollection(lines, linewidths=2, colors=[(0,0,0,0.1)])
         ax.add_collection(lc)
 
         crossingDict = {}
