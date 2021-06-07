@@ -1,7 +1,6 @@
 import prody as pd
 import pylab as pl
 from matplotlib import collections  as mc
-import igraph as ig
 import numpy as np
 from scipy.linalg import expm
 

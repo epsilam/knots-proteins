@@ -6,7 +6,6 @@ import numpy as np
 class ProteinGraph():
     def __init__(self, proteinName: str, angle1: float, angle2: float):
 
-        #
         self.PP = pp.ProteinProjection(proteinName,angle1,angle2)
         self.PP.findBackbonePrimaryCrossings()
         self.PP.findProteinStructureBonds()
@@ -20,7 +19,10 @@ class ProteinGraph():
         # of the vertices connected to the vertex.
         self.Sverts = {}  # n : [res, prev, next]
         self.Hverts = {}  # n : [res, prev1, next1, prev2, next2]
-        self.Cverts = {}  # n : [res, prevOver, nextOver, prevUnder, nextUnder]
+        self.Cverts = {}  # n : [(resi1, resi2, resj1, resj2),
+                          #      prevOver, nextOver,
+                          #      prevUnder, nextUnder]
+
 
         # add simple vertices. the first vertex has no previous vertex, and
         # the last vertex has no next vertex.
@@ -34,6 +36,22 @@ class ProteinGraph():
         # add H-vertices and connect appropriately.
         for i in range(numVerts):
             self._resolveHVertices(i)
+
+        # add crossings
+        # to each crossing in the dictionaries of self.PP, we also assign a
+        # special "crossing index", separate from the indices used in the
+        # dictionaries self.Sverts, self.Hverts, and self.Cverts.
+        # this new crossing index is useful since we may have several vertices
+        # corresponding to a crossing in the same location due to doubled
+        # strands connected to the H-vertices.
+
+        self.BBcrossings = {} # crossings between two backbone strands.
+                              # format: (ri1,ri2,rj1,rj2) : (seen, n1)
+        self.BHcrossings = {} # crossings between a backbone and H-bond strand
+                              # format: (ri1,ri2,rj1,rj2) : (seen, n1,n2)
+        self.HHcrossings = {} # crossings between two H-bond strands
+                              # format: (ri1,ri2,rj1,rj2) : (seen, n1,n2,n3,n4)
+
 
     def _findHBondedResidues(self, resnum: int):
         """Return the set of residues bonded to resnum via an H-bond."""
@@ -98,3 +116,15 @@ class ProteinGraph():
                                self.Sverts[nBondedIdx][2]]
             self.Hverts[HvertIdx][3] = v1
             self.Hverts[HvertIdx][4] = v2
+
+            nBondedNext = self.Sverts[nBonded][2]
+            self.Sverts[nBondedNext][1] = v2
+            self.Sverts[nBonded][2]     = v1
+
+
+    def _resolveCrossingsAlongBackbone(self, resnum):
+        """Resolve crossings along the bond between the residue given by resnum
+        and the next residue on the chain."""
+
+
+    def _resolveCrossingsAlongHBond(self,):
