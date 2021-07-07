@@ -61,10 +61,12 @@ class Graph():
             nxt1 = self.Hverts[vert1][2]
             self.Hverts[vert1][2] = vertexID
             res1 = self.Hverts[vert1][0]
+        self.Sverts[nxt1][1] = vertexID # note: nxt1 must be an S-vertex
         prv2 = self.__newVertexID()
         nxt2 = self.__newVertexID()
         res2 = self.Sverts[vert2][0]
         vert2nxt = self.Sverts[vert2][2]
+        self.Sverts[vert2nxt][1] = nxt2
         self.Hverts[vertexID] = [res1, prv1, nxt1, prv2, nxt2]
         self.Sverts[vert2][2] = prv2
         self.Sverts[prv2] = [res2, vert2, vertexID]
