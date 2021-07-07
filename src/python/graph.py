@@ -101,13 +101,12 @@ class Graph():
         appropriately. Also connect the previous vertex prv, but not nxt.
         resPairs : a 4-tuple of the form (resi1, resi2, resj1, resj2).
         prv    : either an S-vertex, H-vertex, or X-vertex.
-        nxt    : an S-vertex or X-vertex.
+        nxt    : any vertex or None.
         isOver : bool denoting if the strand between prv, nxt is over or under.
         isOtherStrandHbond : bool
         Returns ID of furthest of the two new X-vertex created on the strand."""
 
         if resPairs not in self._seenXings:
-            self._seenXings.add(resPairs)
             if isOtherStrandHbond:
                 X1 = self.__newVertexID()
                 X2 = self.__newVertexID()
@@ -118,7 +117,7 @@ class Graph():
                 else:
                     self.Xverts[X1] = [resPairs, None, None, prv, X2]
                     self.Xverts[X2] = [resPairs, None, None, X1, nxt]
-                self.__resolvePrvVertOnAddXvertAlongBB(prv, X2)
+                self.__resolvePrvVertOnAddXvertAlongBB(prv, X1)
                 return X2
             else:
                 X1 = self.__newVertexID()
@@ -147,3 +146,106 @@ class Graph():
             del self._seenXings[resPairs]
             self.__resolvePrvVertOnAddXvertAlongBB(prv, X1)
             return X1
+
+    def __resolvePrvVertOnAddXvertAlongHbond(self, prv1, nxt2, xvert1, xvert2):
+        """Same as __resolvePrvVertOnAddXvertAlongBB(), but for along Hbonds.
+        Since the two strands go in opposite directions, we use nxt2 in place of
+        prv2. We have two cases: either prv1 and nxt2 are both the same
+        H-vertex, or they are two distinct X-vertices.
+        """
+        try:
+            self.Hverts[prv1][4] = xvert1
+            self.Hverts[prv1][3] = xvert2
+            if prv1 != nxt2:
+                raise Exception("unexpected H-vertex mismatch")
+        except KeyError:
+            # check if over. since strands will be either both over or both
+            # under, we only check one vertex.
+            if self.Xverts[prv1][1] is not None and \
+               self.Xverts[prv1][2] is None: # on the over strand
+                self.Xverts[prv1][2] = xvert1
+                self.Xverts[nxt2][1] = xvert2
+            elif self.Xverts[prv1][3] is not None and\
+                 self.Xverts[prv1][4] is None: # on the under strand
+                self.Xverts[prv1][4] = xvert1
+                self.Xverts[nxt2][3] = xvert2
+
+
+    def _addXvertsAlongHbond(self,
+                             resPairs,
+                             prv1, nxt1, prv2, nxt2,
+                             isOver,
+                             isOtherStrandHbond):
+        """Same as _addXvertsAlongBB, but goes along H-bonds, and returns ID of
+        two X-vertices. Creates either 2 or 4 vertices, depending on whether
+        the H-bond crosses a peptide bond or another H-bond.
+        Recall that the two strands along an H-bond travel in opposite
+        directions. By convention, we take the 1 strand to be travelling away
+        from the H-vertex, and the 2 strand to be going toward the H-vertex.
+        """
+        if not isOtherStrandHbond:
+            # here, the other strand is a peptide bond, so it will have been
+            # seen before.
+            [X1, X2] = self._seenXings[resPairs]
+            if isOver:
+                self.Xverts[X1][1] = prv1
+                self.Xverts[X1][2] = nxt1
+                self.Xverts[X2][1] = prv2
+                self.Xverts[X2][2] = nxt2
+
+            else:
+                self.Xverts[X1][3] = prv1
+                self.Xverts[X1][4] = nxt1
+                self.Xverts[X2][3] = prv2
+                self.Xverts[X2][4] = nxt2
+            self.__resolvePrvVertOnAddXvertAlongHbond(prv1, nxt2, X1, X2)
+            return (X1, X2)
+
+        else: # crossing of two H-bonds.
+            if resPairs not in self._seenXings:
+                # create 4 vertices.
+                # by convention, we will take X-verticess 1 and 3 to be on the
+                # strand going away from the H-vertex, and 2 and 4 going toward
+                # the H-vertex.
+                X1 = self.__newVertexID()
+                X2 = self.__newVertexID()
+                X3 = self.__newVertexID()
+                X4 = self.__newVertexID()
+                self._seenXings[resPairs] = [X1, X2, X3, X4]
+                if isOver:
+                    self.Xverts[X1] = [resPairs, prv1, X3, None, None]
+                    self.Xverts[X3] = [resPairs, X1, nxt1, None, None]
+                    self.Xverts[X2] = [resPairs, X4, nxt2, None, None]
+                    self.Xverts[X4] = [resPairs, prv2, X2, None, None]
+                else:
+                    self.Xverts[X1] = [resPairs, None, None, prv1, X3]
+                    self.Xverts[X3] = [resPairs, None, None, X1, nxt1]
+                    self.Xverts[X2] = [resPairs, None, None, X4, nxt2]
+                    self.Xverts[X4] = [resPairs, None, None, prv2, X2]
+                self.__resolvePrvVertOnAddXvertAlongHbond(prv1, nxt2, X1, X2)
+                return (X3, X4)
+            else: # case that we have encountered this crossing before.
+                  # notice that the ordering of X1,X2,X3,X4 changes (we rotate
+                  # the square by 90 degrees).
+                [X1, X2, X3, X4] = self._seenXings[resPairs]
+                if isOver:
+                    self.Xverts[X1][1] = prv1
+                    self.Xverts[X1][2] = X2
+                    self.Xverts[X2][1] = X1
+                    self.Xverts[X2][2] = nxt1
+                    self.Xverts[X4][1] = prv2
+                    self.Xverts[X4][2] = X3
+                    self.Xverts[X3][1] = X4
+                    self.Xverts[X3][2] = nxt2
+                else:
+                    self.Xverts[X1][3] = prv1
+                    self.Xverts[X1][4] = X2
+                    self.Xverts[X2][3] = X1
+                    self.Xverts[X2][4] = nxt1
+                    self.Xverts[X4][3] = prv2
+                    self.Xverts[X4][4] = X3
+                    self.Xverts[X3][3] = X4
+                    self.Xverts[X3][4] = nxt2
+                del self._seenXings[resPairs]
+                self.__resolvePrvVertOnAddXvertAlongHbond(prv1, nxt2, X1, X3)
+                return (X2, X4)
