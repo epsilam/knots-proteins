@@ -45,7 +45,13 @@ class ProteinProjection:
                                          # bonds on the backbone. the key
                                          # (i,i+1,j,j+1) is included if the bond
                                          # between i and i+1 crosses the bond
-                                         # between j and j+1.
+                                         # between j and j+1. the value is a
+                                         # pair (position, isPositive)
+                                         # where position is the (x,y) position
+                                         # of the crossing, and isPositive
+                                         # is a boolean equal to True if the
+                                         # crossing is positive and False if
+                                         # negative.
 
         self.proteinStructureBonds = set() # a set of pairs of residues which
                                            # are bonded via a non-peptide bond.
@@ -85,7 +91,12 @@ class ProteinProjection:
         u = np.cross(E,R) / crossRS
         if crossRS != 0:
             if 0 <= t <= 1 and 0 <= u <= 1:
-                crossingDict[(resi1,resi2,resj1,resj2)] = A + t * R
+                isPositive = (crossRs > 0)
+                crossingDict[(resi1,resi2,resj1,resj2)] = (A + t * R,
+                                                           isPositive)
+        else:
+            raise Exception("Bonds appear tangent in projection.\
+            Use different projection.")
 
                           # for each pair of two successive residues (i.e., two
                           # residues with a peptide bond), check if there is a
