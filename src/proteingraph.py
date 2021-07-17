@@ -82,13 +82,13 @@ class ProteinGraph(Graph):
                        # (resi1,resi2,resj1,resj2)
                        # : (isOver, isOtherStrandHbond, dist)
         for key,value in self.ProProj.structureWithBackboneCrossings.items():
-            dist = norm(self.ProProj.projectedResCoords[res] - value)
+            dist = norm(self.ProProj.projectedResCoords[res] - value[0])
             if (res1,res2) == key[0:2]:
                 crossings[key] = (True, False, dist)
             if (res1,res2) == key[2:4]:
                 crossings[key] = (False, False, dist)
         for key,value in self.ProProj.structureCrossings.items():
-            dist = norm(self.ProProj.projectedResCoords[res] - value)
+            dist = norm(self.ProProj.projectedResCoords[res] - value[0])
             if (res1,res2) == key[0:2]:
                 crossings[key] = (True, True, dist)
             if (res1,res2) == key[2:4]:

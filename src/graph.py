@@ -4,11 +4,12 @@ class Graph():
     def __init__(self):
         self._vertexIDTracker = 0
 
-        self.Sverts = {}  # n : [res, prev, next]
-        self.Hverts = {}  # n : [res, prev1, next1, prev2, next2]
+        self.Sverts = {}  # n : [res, prev, next, isPositive]
+        self.Hverts = {}  # n : [res, prev1, next1, prev2, next2, isPositive]
         self.Xverts = {}  # n : [(resi1, resi2, resj1, resj2),
                           #      prevOver, nextOver,
-                          #      prevUnder, nextUnder]
+                          #      prevUnder, nextUnder,
+                          #      isPositive]
 
         self._seenXings = {} # Seen but unresolved crossings. As we
                              # process all the crossings on a bond between
@@ -96,7 +97,8 @@ class Graph():
                           resPairs,
                           prv, nxt,
                           isOver,
-                          isOtherStrandHbond):
+                          isOtherStrandHbond,
+                          isPositive):
         """If the crossing has not been seen before, add 1 or 2 new X-vertices
         along a strand on the backbone depending on if the strand crosses the
         backbone or an H-bond. If the crossing has been seen before, connect it
@@ -114,20 +116,20 @@ class Graph():
                 X2 = self.__newVertexID()
                 self._seenXings[resPairs] = [X1, X2]
                 if isOver:
-                    self.Xverts[X1] = [resPairs, prv, X2, None, None]
-                    self.Xverts[X2] = [resPairs, X1, nxt, None, None]
+                    self.Xverts[X1] = [resPairs,prv,X2,None,None,False]
+                    self.Xverts[X2] = [resPairs,X1,nxt,None,None,True]
                 else:
-                    self.Xverts[X1] = [resPairs, None, None, prv, X2]
-                    self.Xverts[X2] = [resPairs, None, None, X1, nxt]
+                    self.Xverts[X1] = [resPairs,None,None,prv,X2,True]
+                    self.Xverts[X2] = [resPairs,None,None,X1,nxt,False]
                 self.__resolvePrvVertOnAddXvertAlongBB(prv, X1)
                 return X2
             else:
                 X1 = self.__newVertexID()
                 self._seenXings[resPairs] = [X1]
                 if isOver:
-                    self.Xverts[X1] = [resPairs, prv, nxt, None, None]
+                    self.Xverts[X1] = [resPairs,prv,nxt,None,None,isPositive]
                 else:
-                    self.Xverts[X1] = [resPairs, None, None, prv, nxt]
+                    self.Xverts[X1] = [resPairs,None,None,prv,nxt,isPositive]
                 self.__resolvePrvVertOnAddXvertAlongBB(prv, X1)
                 return X1
         else: # case that crossing has been seen before.
@@ -177,7 +179,8 @@ class Graph():
                              resPairs,
                              prv1, nxt1, prv2, nxt2,
                              isOver,
-                             isOtherStrandHbond):
+                             isOtherStrandHbond,
+                             isPositive):
         """Same as _addXvertsAlongBB, but goes along H-bonds, and returns ID of
         two X-vertices. Creates either 2 or 4 vertices, depending on whether
         the H-bond crosses a peptide bond or another H-bond.
@@ -189,17 +192,22 @@ class Graph():
             # here, the other strand is a peptide bond, so it will have been
             # seen before.
             [X1, X2] = self._seenXings[resPairs]
-            if isOver:
-                self.Xverts[X1][1] = prv1
-                self.Xverts[X1][2] = nxt1
-                self.Xverts[X2][1] = prv2
-                self.Xverts[X2][2] = nxt2
 
+
+            if isOver:
+                strandPrv = 1; strandNxt = 2
+                if not isPositive:
+                    Xtemp = X1; X1 = X2; X2 = Xtemp
             else:
-                self.Xverts[X1][3] = prv1
-                self.Xverts[X1][4] = nxt1
-                self.Xverts[X2][3] = prv2
-                self.Xverts[X2][4] = nxt2
+                strandPrv = 3; strandNxt = 4
+                if isPositive:
+                    Xtemp = X1; X1 = X2; X2 = Xtemp
+
+            self.Xverts[X1][strandPrv] = prv1
+            self.Xverts[X1][strandNxt] = nxt1
+            self.Xverts[X2][strandPrv] = prv2
+            self.Xverts[X2][strandNxt] = nxt2
+
             self.__resolvePrvVertOnAddXvertAlongHbond(prv1, nxt2, X1, X2)
             return (X1, X2)
 
@@ -215,39 +223,46 @@ class Graph():
                 X4 = self.__newVertexID()
                 self._seenXings[resPairs] = [X1, X2, X3, X4]
                 if isOver:
-                    self.Xverts[X1] = [resPairs, prv1, X3, None, None]
-                    self.Xverts[X3] = [resPairs, X1, nxt1, None, None]
-                    self.Xverts[X2] = [resPairs, X4, nxt2, None, None]
-                    self.Xverts[X4] = [resPairs, prv2, X2, None, None]
+                    self.Xverts[X1] = [resPairs,prv1,X3,None,None,False]
+                    self.Xverts[X3] = [resPairs,X1,nxt1,None,None,True]
+                    self.Xverts[X2] = [resPairs,X4,nxt2,None,None,True]
+                    self.Xverts[X4] = [resPairs,prv2,X2,None,None,False]
                 else:
-                    self.Xverts[X1] = [resPairs, None, None, prv1, X3]
-                    self.Xverts[X3] = [resPairs, None, None, X1, nxt1]
-                    self.Xverts[X2] = [resPairs, None, None, X4, nxt2]
-                    self.Xverts[X4] = [resPairs, None, None, prv2, X2]
+                    self.Xverts[X1] = [resPairs,None,None,prv1,X3,True]
+                    self.Xverts[X3] = [resPairs,None,None,X1,nxt1,False]
+                    self.Xverts[X2] = [resPairs,None,None,X4,nxt2,False]
+                    self.Xverts[X4] = [resPairs,None,None,prv2,X2,True]
                 self.__resolvePrvVertOnAddXvertAlongHbond(prv1, nxt2, X1, X2)
                 return (X3, X4)
             else: # case that we have encountered this crossing before.
                   # notice that the ordering of X1,X2,X3,X4 changes (we rotate
                   # the square by 90 degrees).
                 [X1, X2, X3, X4] = self._seenXings[resPairs]
+
                 if isOver:
-                    self.Xverts[X1][1] = prv1
-                    self.Xverts[X1][2] = X2
-                    self.Xverts[X2][1] = X1
-                    self.Xverts[X2][2] = nxt1
-                    self.Xverts[X4][1] = prv2
-                    self.Xverts[X4][2] = X3
-                    self.Xverts[X3][1] = X4
-                    self.Xverts[X3][2] = nxt2
+                    strandPrv = 1; strandNxt = 2
+                    if not isPositive:
+                        Xtemp = X1; X1 = X4; X4 = Xtemp
+                        Xtemp = X2; X2 = X3; X3 = Xtemp
+
                 else:
-                    self.Xverts[X1][3] = prv1
-                    self.Xverts[X1][4] = X2
-                    self.Xverts[X2][3] = X1
-                    self.Xverts[X2][4] = nxt1
-                    self.Xverts[X4][3] = prv2
-                    self.Xverts[X4][4] = X3
-                    self.Xverts[X3][3] = X4
-                    self.Xverts[X3][4] = nxt2
+                    strandPrv = 3; strandNxt = 4
+                    if isPositive:
+                        Xtemp = X1; X1 = X4; X4 = Xtemp
+                        Xtemp = X2; X2 = X3; X3 = Xtemp
+
+                self.Xverts[X2][strandPrv] = prv1
+                self.Xverts[X2][strandNxt] = X1
+
+                self.Xverts[X1][strandPrv] = X2
+                self.Xverts[X1][strandNxt] = nxt1
+
+                self.Xverts[X3][strandPrv] = prv2
+                self.Xverts[X3][strandNxt] = X4
+
+                self.Xverts[X4][strandPrv] = X3
+                self.Xverts[X4][strandNxt] = nxt2
+
+                self.__resolvePrvVertOnAddXvertAlongHbond(prv1,nxt2,X2,X4)
                 del self._seenXings[resPairs]
-                self.__resolvePrvVertOnAddXvertAlongHbond(prv1, nxt2, X1, X3)
                 return (X2, X4)
