@@ -276,9 +276,6 @@ class Graph():
         prv = self.Sverts[vert][1]
         nxt = self.Sverts[vert][2]
 
-        print("vert:",vert)
-        print("prv:",prv)
-        print("nxt:",nxt)
         del self.Sverts[vert]
 
         if prv is not None:
