@@ -91,7 +91,7 @@ class ProteinProjection:
         u = np.cross(E,R) / crossRS
         if crossRS != 0:
             if 0 <= t <= 1 and 0 <= u <= 1:
-                isPositive = (crossRs > 0)
+                isPositive = (crossRS > 0)
                 crossingDict[(resi1,resi2,resj1,resj2)] = (A + t * R,
                                                            isPositive)
         else:
@@ -121,6 +121,8 @@ class ProteinProjection:
             r1 = bondAtomPair[0].getResnum()
             r2 = bondAtomPair[1].getResnum()
             if r1 != r2 and r1 != r2 + 1 and r1 != r2 - 1:
+                if r2 < r1: # to ensure no duplicates, force r1 < r2
+                    temp = r1; r1 = r2; r2 = temp
                 self.proteinStructureBonds.add((r1,r2))
 
 

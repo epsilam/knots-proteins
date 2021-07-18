@@ -10,6 +10,19 @@ class ProteinGraph(Graph):
         self.initialVerts = {} # dictionary to keep track of S-vertices
                                # representing actual residues.
 
+    def resolve(self):
+        """Create the entire graph corresponding to the given protein,
+        resolving all H-bonds and crossings."""
+        self.initResVerts()
+
+        resNums = self.ProProj.resNums
+        for res in resNums[:-1]:
+            self.resolveHverts(res)
+        for res in resNums[:-1]:
+            self.resolveXvertsBB(res)
+        for (res1,res2) in self.ProProj.proteinStructureBonds:
+            self.resolveXvertsHbond(res1,res2)
+
     def initResVerts(self):
         """Create initial S-vertices corresponding to each residue
         in the chain."""
@@ -63,7 +76,7 @@ class ProteinGraph(Graph):
                 crossings[key] = (False, True, dist, isPositive)
         crossings = OrderedDict(sorted(crossings.items(),key=lambda x:x[1][2]))
 
-        vert2 = self.initialVert[res2]
+        vert2 = self.initialVerts[res2]
         vert1 = self.Sverts[vert2][1]
         for resPairs in list(crossings)[:-1]:
             isOver = crossings[resPairs][0]
@@ -74,15 +87,16 @@ class ProteinGraph(Graph):
                                            isOver,
                                            isOtherStrandHbond,
                                            isPositive)
-        resPairs = crossings[-1] # last crossing
-        isOver = crossings[resPairs][0]
-        isOtherStrandHbond = crossigns[resPairs][1]
-        isPositive = crossings[resPairs][3]
-        vert1 = self._addXvertsAlongBB(resPairs,
-                                       vert1, vert2,
-                                       isOver,
-                                       isOtherStrandHbond,
-                                       isPositive)
+        if len(crossings) != 0: # deal with last crossing, if a crossing exists
+            resPairs = list(crossings)[-1]
+            isOver = crossings[resPairs][0]
+            isOtherStrandHbond = crossings[resPairs][1]
+            isPositive = crossings[resPairs][3]
+            vert1 = self._addXvertsAlongBB(resPairs,
+                                           vert1, vert2,
+                                           isOver,
+                                           isOtherStrandHbond,
+                                           isPositive)
         self.Sverts[vert2][1] = vert1
 
     def resolveXvertsHbond(self, res1, res2):
@@ -93,14 +107,14 @@ class ProteinGraph(Graph):
                        # : (isOver, isOtherStrandHbond, dist, isPositive)
         for key,value in self.ProProj.structureWithBackboneCrossings.items():
             isPositive = value[1]
-            dist = norm(self.ProProj.projectedResCoords[res] - value[0])
+            dist = norm(self.ProProj.projectedResCoords[res1] - value[0])
             if (res1,res2) == key[0:2]:
                 crossings[key] = (True, False, dist, isPositive)
             if (res1,res2) == key[2:4]:
                 crossings[key] = (False, False, dist, isPositive)
         for key,value in self.ProProj.structureCrossings.items():
             isPositive = value[1]
-            dist = norm(self.ProProj.projectedResCoords[res] - value[0])
+            dist = norm(self.ProProj.projectedResCoords[res1] - value[0])
             if (res1,res2) == key[0:2]:
                 crossings[key] = (True, True, dist, isPositive)
             if (res1,res2) == key[2:4]:
@@ -113,7 +127,9 @@ class ProteinGraph(Graph):
         nxt = self.Sverts[vert][2]
         try:
             while True:
-                svert = self.Hverts[nxt][3]
+                svert = nxt + 1 # the corresponding S-verts are created right
+                                # after the H-verex, so their ID's are created
+                                # one after another.
                 if self.Sverts[svert][0] == res2: # check that the H-vertex is
                                                   # along a strand which goes
                                                   # through res2
@@ -125,8 +141,8 @@ class ProteinGraph(Graph):
         Hvert = nxt
         # we use the convention that the strand travelling away from the
         # H-vertex is labelled 1, and the one going toward it is labelled 2.
-        Svert1 = self.Hverts[Hvert][4]
-        Svert2 = self.Hverts[Hvert][3]
+        Svert2 = Hvert + 1
+        Svert1 = Hvert + 2
         v1 = Hvert
         v2 = Hvert
         for resPairs in list(crossings)[:-1]:
@@ -139,15 +155,16 @@ class ProteinGraph(Graph):
                                                 isOver,
                                                 isOtherStrandHbond,
                                                 isPositive)
-        resPairs = crossings[-1]
-        isOver = crossings[resPairs][0]
-        isOtherStrandHbond = crossigns[resPairs][1]
-        isPositive = crossings[resPairs][3]
-        (v1,v2) = self._addXvertsAlongHbond(resPairs,
-                                            v1,Svert1,
-                                            Svert2,v2,
-                                            isOver,
-                                            isOtherStrandHbond,
-                                            isPositive)
+        if len(crossings) != 0: # deal with last crossing, if a crossing exists
+            resPairs = list(crossings)[-1] # last crossing
+            isOver = crossings[resPairs][0]
+            isOtherStrandHbond = crossings[resPairs][1]
+            isPositive = crossings[resPairs][3]
+            (v1,v2) = self._addXvertsAlongHbond(resPairs,
+                                                v1,Svert1,
+                                                Svert2,v2,
+                                                isOver,
+                                                isOtherStrandHbond,
+                                                isPositive)
         self.Sverts[Svert1][1] = v1
         self.Sverts[Svert2][2] = v2
