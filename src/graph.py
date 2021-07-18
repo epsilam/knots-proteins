@@ -4,8 +4,8 @@ class Graph():
     def __init__(self):
         self._vertexIDTracker = 0
 
-        self.Sverts = {}  # n : [res, prev, next, isPositive]
-        self.Hverts = {}  # n : [res, prev1, next1, prev2, next2, isPositive]
+        self.Sverts = {}  # n : [res, prev, next]
+        self.Hverts = {}  # n : [res, prev1, next1, prev2, next2]
         self.Xverts = {}  # n : [(resi1, resi2, resj1, resj2),
                           #      prevOver, nextOver,
                           #      prevUnder, nextUnder,
@@ -266,3 +266,57 @@ class Graph():
                 self.__resolvePrvVertOnAddXvertAlongHbond(prv1,nxt2,X2,X4)
                 del self._seenXings[resPairs]
                 return (X1, X3)
+
+    def _pruneSvert(self, vert):
+        """Prune the S-vertex vert from the graph, if it exists, and
+        appropriately connect its neighbours."""
+        if vert not in self.Sverts:
+            raise Exception("Error in pruning: given vertex is not an S-vertex")
+
+        prv = self.Sverts[vert][1]
+        nxt = self.Sverts[vert][2]
+
+        print("vert:",vert)
+        print("prv:",prv)
+        print("nxt:",nxt)
+        del self.Sverts[vert]
+
+        if prv is not None:
+            if prv in self.Sverts:
+                self.Sverts[prv][2] = nxt
+            elif prv in self.Hverts:
+                if vert == self.Hverts[prv][2]: # vert is on the backbone strand
+                    self.Hverts[prv][2] = nxt
+                elif vert == self.Hverts[prv][4]: # vert is on the H-bond strand
+                    self.Hverts[prv][4] = nxt
+                else: # vert is on neither strand
+                    raise Exception("Error in pruning: H-vertex error")
+            elif prv in self.Xverts:
+                if vert == self.Xverts[prv][2]:
+                    self.Xverts[prv][2] = nxt
+                elif vert == self.Xverts[prv][4]:
+                    self.Xverts[prv][4] = nxt
+                else:
+                    raise Exception("Error in pruning: X-vertex error")
+            else:
+                raise Exception("Error in pruning: prv not found")
+
+        if nxt is not None:
+            if nxt in self.Sverts:
+                self.Sverts[nxt][1] = prv
+            elif nxt in self.Hverts:
+                if vert == self.Hverts[nxt][1]:
+                    self.Hverts[nxt][1] = prv
+                elif vert == self.Hverts[nxt][3]:
+                    self.Hverts[nxt][3] = prv
+                else:
+                    raise Exception("Error in pruning: H-vertex error")
+            elif nxt in self.Xverts:
+                if vert == self.Xverts[nxt][1]:
+                    self.Xverts[nxt][1] = prv
+                elif vert == self.Xverts[nxt][3]:
+                    self.Xverts[nxt][3] = prv
+                else:
+                    raise Exception("Error in pruning: X-vertex error")
+            else:
+                raise Exception("Error in pruning: nxt not found")

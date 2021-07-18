@@ -22,6 +22,8 @@ class ProteinGraph(Graph):
             self.resolveXvertsBB(res)
         for (res1,res2) in self.ProProj.proteinStructureBonds:
             self.resolveXvertsHbond(res1,res2)
+        for vert in list(self.Sverts):
+            self._pruneSvert(vert)
 
     def initResVerts(self):
         """Create initial S-vertices corresponding to each residue
