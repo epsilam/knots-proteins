@@ -127,8 +127,8 @@ class ProteinGraph(Graph):
         # H-vertex is labelled 1, and the one going toward it is labelled 2.
         Svert1 = self.Hverts[Hvert][4]
         Svert2 = self.Hverts[Hvert][3]
-
-
+        v1 = Hvert
+        v2 = Hvert
         for resPairs in list(crossings)[:-1]:
             isOver = crossings[resPairs][0]
             isOtherStrandHbond = crossings[resPairs][1]
@@ -149,3 +149,5 @@ class ProteinGraph(Graph):
                                             isOver,
                                             isOtherStrandHbond,
                                             isPositive)
+        self.Sverts[Svert1][1] = v1
+        self.Sverts[Svert2][2] = v2
