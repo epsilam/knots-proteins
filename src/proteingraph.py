@@ -46,33 +46,43 @@ class ProteinGraph(Graph):
         # distance to the residue res.
         crossings = {} # format:
                        # (resi1,resi2,resj1,resj2)
-                       # : (isOver, isOtherStrandHbond, dist)
+                       # : (isOver, isOtherStrandHbond, dist, isPositive)
         for key,value in self.ProProj.backboneCrossings.items():
+            isPositive = value[1]
             dist = norm(self.ProProj.projectedResCoords[res] - value[0])
             if (res,res2) == key[0:2]:
-                crossings[key] = (True, False, dist)
+                crossings[key] = (True, False, dist, isPositive)
             if (res,res2) == key[2:4]:
-                crossings[key] = (False, False, dist)
+                crossings[key] = (False, False, dist, isPositive)
         for key,value in self.ProProj.structureWithBackboneCrossings.items():
+            isPositive = value[1]
             dist = norm(self.ProProj.projectedResCoords[res] - value[0])
             if (res,res2) == key[0:2]:
-                crossings[key] = (True, True, dist)
+                crossings[key] = (True, True, dist, isPositive)
             if (res,res2) == key[2:4]:
-                crossings[key] = (False, True, dist)
+                crossings[key] = (False, True, dist, isPositive)
         crossings = OrderedDict(sorted(crossings.items(),key=lambda x:x[1][2]))
 
         vert2 = self.initialVert[res2]
         vert1 = self.Sverts[vert2][1]
         for resPairs in list(crossings)[:-1]:
             isOver = crossings[resPairs][0]
-            isOtherStrandHbond = crossigns[resPairs][1]
-            vert1 = self._addXvertsAlongBB(resPairs, vert1, None,
-                                           isOver, isOtherStrandHbond)
+            isOtherStrandHbond = crossings[resPairs][1]
+            isPositive = crossings[resPairs][3]
+            vert1 = self._addXvertsAlongBB(resPairs,
+                                           vert1, None,
+                                           isOver,
+                                           isOtherStrandHbond,
+                                           isPositive)
         resPairs = crossings[-1] # last crossing
         isOver = crossings[resPairs][0]
         isOtherStrandHbond = crossigns[resPairs][1]
-        vert1 = self._addXvertsAlongBB(resPairs, vert1, vert2,
-                                           isOver, isOtherStrandHbond)
+        isPositive = crossings[resPairs][3]
+        vert1 = self._addXvertsAlongBB(resPairs,
+                                       vert1, vert2,
+                                       isOver,
+                                       isOtherStrandHbond,
+                                       isPositive)
         self.Sverts[vert2][1] = vert1
 
     def resolveXvertsHbond(self, res1, res2):
@@ -80,20 +90,62 @@ class ProteinGraph(Graph):
         """
         crossings = {} # format:
                        # (resi1,resi2,resj1,resj2)
-                       # : (isOver, isOtherStrandHbond, dist)
+                       # : (isOver, isOtherStrandHbond, dist, isPositive)
         for key,value in self.ProProj.structureWithBackboneCrossings.items():
+            isPositive = value[1]
             dist = norm(self.ProProj.projectedResCoords[res] - value[0])
             if (res1,res2) == key[0:2]:
-                crossings[key] = (True, False, dist)
+                crossings[key] = (True, False, dist, isPositive)
             if (res1,res2) == key[2:4]:
-                crossings[key] = (False, False, dist)
+                crossings[key] = (False, False, dist, isPositive)
         for key,value in self.ProProj.structureCrossings.items():
+            isPositive = value[1]
             dist = norm(self.ProProj.projectedResCoords[res] - value[0])
             if (res1,res2) == key[0:2]:
-                crossings[key] = (True, True, dist)
+                crossings[key] = (True, True, dist, isPositive)
             if (res1,res2) == key[2:4]:
-                crossings[key] = (False, True, dist)
+                crossings[key] = (False, True, dist, isPositive)
         crossings = OrderedDict(sorted(crossings.items(),key=lambda x:x[1][2]))
 
-        # now, we need to find the relevant H-vertex and the corresponding
+        # find the relevant H-vertex and the corresponding
         # two S-vertices that match the H-bond between the two given residues.
+        vert = self.initialVerts[res1]
+        nxt = self.Sverts[vert][2]
+        try:
+            while True:
+                svert = self.Hverts[nxt][3]
+                if self.Sverts[svert][0] == res2: # check that the H-vertex is
+                                                  # along a strand which goes
+                                                  # through res2
+                    break
+                nxt = self.Hverts[nxt][2]
+        except KeyError:
+            raise Exception("Error in resolving X-vertices along H-bond.\
+             No H-bond found between these two residues")
+        Hvert = nxt
+        # we use the convention that the strand travelling away from the
+        # H-vertex is labelled 1, and the one going toward it is labelled 2.
+        Svert1 = self.Hverts[Hvert][4]
+        Svert2 = self.Hverts[Hvert][3]
+
+
+        for resPairs in list(crossings)[:-1]:
+            isOver = crossings[resPairs][0]
+            isOtherStrandHbond = crossings[resPairs][1]
+            isPositive = crossings[resPairs][3]
+            (v1,v2) = self._addXvertsAlongHbond(resPairs,
+                                                v1,None,
+                                                None,v2,
+                                                isOver,
+                                                isOtherStrandHbond,
+                                                isPositive)
+        resPairs = crossings[-1]
+        isOver = crossings[resPairs][0]
+        isOtherStrandHbond = crossigns[resPairs][1]
+        isPositive = crossings[resPairs][3]
+        (v1,v2) = self._addXvertsAlongHbond(resPairs,
+                                            v1,Svert1,
+                                            Svert2,v2,
+                                            isOver,
+                                            isOtherStrandHbond,
+                                            isPositive)

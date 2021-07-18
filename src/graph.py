@@ -265,4 +265,4 @@ class Graph():
 
                 self.__resolvePrvVertOnAddXvertAlongHbond(prv1,nxt2,X2,X4)
                 del self._seenXings[resPairs]
-                return (X2, X4)
+                return (X1, X3)
