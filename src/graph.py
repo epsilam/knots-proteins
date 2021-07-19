@@ -317,3 +317,43 @@ class Graph():
                     raise Exception("Error in pruning: X-vertex error")
             else:
                 raise Exception("Error in pruning: nxt not found")
+
+    def _printHvert(self,v):
+        """Print information about the given H-vertex."""
+        try:
+            print("ASSOCIATED RESIDUE NUMBER:", self.Hverts[v][0])
+            print("PREV VERTEX ALONG 1ST STRAND:", self.Hverts[v][1])
+            print("NEXT VERTEX ALONG 1ST STRAND:", self.Hverts[v][2])
+            print("PREV VERTEX ALONG 2ND STRAND:", self.Hverts[v][3])
+            print("NEXT VERTEX ALONG 2ND STRAND:", self.Hverts[v][4])
+        except KeyError:
+            print(v, "is not an H-vertex.")
+
+    def _printXvert(self,v):
+        """Print information about the given H-vertex."""
+        try:
+            print("CROSSING OF BONDS BETWEEN THE FOLLOWING PAIRS OF RESIDUES:\n",
+                  str(self.Xverts[v][0][0])+"---"+str(self.Xverts[v][0][1])+"\n",
+                  str(self.Xverts[v][0][2])+"---"+str(self.Xverts[v][0][3]))
+
+            if self.Xverts[v][5]: orientation = "positive"
+            else: orientation = "negative"
+
+            print("ORIENTATION:", orientation)
+            print("PREV VERTEX ALONG OVER STRAND:", self.Xverts[v][1])
+            print("NEXT VERTEX ALONG OVER STRAND:", self.Xverts[v][2])
+            print("PREV VERTEX ALONG UNDER STRAND:", self.Xverts[v][3])
+            print("NEXT VERTEX ALONG UNDER STRAND:", self.Xverts[v][4])
+
+        except KeyError:
+            print(v, "is not an X-vertex.")
+
+    def printVertex(self,v):
+        print("INFO ABOUT VERTEX:", v)
+        if v in self.Hverts:
+            print("VERTEX TYPE: H-vertex")
+            self._printHvert(v)
+        elif v in self.Xverts:
+            print("VERTEX TYPE: X-vertex")
+            self._printXvert(v)
+        print()
