@@ -1,27 +1,40 @@
-from graph import *
+from src.graph import *
 from scipy.linalg import norm
 from collections import OrderedDict
-import proteinprojection as proproj
+import src.proteinprojection as proproj
 
 class ProteinGraph(Graph):
     def __init__(self, proteinName: str, angle1: float, angle2: float):
         Graph.__init__(self)
+        print("Parsing PDB file...")
         self.ProProj = proproj.ProteinProjection(proteinName, angle1, angle2)
+        print("PDB file parsed")
         self.initialVerts = {} # dictionary to keep track of S-vertices
                                # representing actual residues.
+        self.resolve()
+        print("Done.")
+
 
     def resolve(self):
         """Create the entire graph corresponding to the given protein,
         resolving all H-bonds and crossings."""
+        print("Creating vertices for each residue...")
         self.initResVerts()
 
         resNums = self.ProProj.resNums
+        print("Creating H-vertices...")
         for res in resNums[:-1]:
             self.resolveHverts(res)
+
+        print("Resolving crossings along backbone...")
         for res in resNums[:-1]:
             self.resolveXvertsBB(res)
+
+        print("Resolving crossings along H-bonds...")
         for (res1,res2) in self.ProProj.proteinStructureBonds:
             self.resolveXvertsHbond(res1,res2)
+
+        print("Pruning unnecessary vertices...")
         for vert in list(self.Sverts):
             self._pruneSvert(vert)
 
