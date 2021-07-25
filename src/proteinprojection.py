@@ -183,7 +183,7 @@ class ProteinProjection:
         crossingDict.update(self.structureWithBackboneCrossings)
         crossCoords = []                # plot crossings
         for key,value in crossingDict.items():
-            crossCoords.append(value)
+            crossCoords.append(value[0])
         xCrossCoords, yCrossCoords = zip(*crossCoords)
         ax.scatter(xCrossCoords,yCrossCoords, c=[(1,0,0,1)], s=30, zorder=3)
 

@@ -8,7 +8,7 @@ class ProteinGraph(Graph):
         Graph.__init__(self)
         print("Parsing PDB file...")
         self.ProProj = proproj.ProteinProjection(proteinName, angle1, angle2)
-        print("PDB file parsed")
+        print("PDB file parsed.")
         self.initialVerts = {} # dictionary to keep track of S-vertices
                                # representing actual residues.
         self.resolve()
@@ -35,8 +35,8 @@ class ProteinGraph(Graph):
             self.resolveXvertsHbond(res1,res2)
 
         print("Pruning unnecessary vertices...")
-        for vert in list(self.Sverts):
-            self._pruneSvert(vert)
+        for vert in list(self.Sverts)[1:]: # we prune all S-vertices except the
+            self._pruneSvert(vert)         # initial vertex.
 
     def initResVerts(self):
         """Create initial S-vertices corresponding to each residue

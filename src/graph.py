@@ -5,7 +5,10 @@ class Graph():
         self._vertexIDTracker = 0
 
         self.Sverts = {}  # n : [res, prev, next]
-        self.Hverts = {}  # n : [res, prev1, next1, prev2, next2]
+        self.Hverts = {}  # n : [res,
+                          #      prev1, next1,
+                          #      prev2, next2,
+                          #      None]
         self.Xverts = {}  # n : [(resi1, resi2, resj1, resj2),
                           #      prevOver, nextOver,
                           #      prevUnder, nextUnder,
@@ -68,7 +71,7 @@ class Graph():
         res2 = self.Sverts[vert2][0]
         vert2nxt = self.Sverts[vert2][2]
         self.Sverts[vert2nxt][1] = nxt2
-        self.Hverts[vertexID] = [res1, prv1, nxt1, prv2, nxt2]
+        self.Hverts[vertexID] = [res1, prv1, nxt1, prv2, nxt2, None]
         self.Sverts[vert2][2] = prv2
         self.Sverts[prv2] = [res2, vert2, vertexID]
         self.Sverts[nxt2] = [res2, vertexID, vert2nxt]
@@ -276,6 +279,9 @@ class Graph():
         prv = self.Sverts[vert][1]
         nxt = self.Sverts[vert][2]
 
+        prvStrand = None # to keep track of which strand connects to which
+        nxtStrand = None
+
         del self.Sverts[vert]
 
         if prv is not None:
@@ -284,15 +290,19 @@ class Graph():
             elif prv in self.Hverts:
                 if vert == self.Hverts[prv][2]: # vert is on the backbone strand
                     self.Hverts[prv][2] = nxt
+                    prvStrand = 1
                 elif vert == self.Hverts[prv][4]: # vert is on the H-bond strand
                     self.Hverts[prv][4] = nxt
+                    prvStrand = 2
                 else: # vert is on neither strand
                     raise Exception("Error in pruning: H-vertex error")
             elif prv in self.Xverts:
                 if vert == self.Xverts[prv][2]:
                     self.Xverts[prv][2] = nxt
+                    prvStrand = 1
                 elif vert == self.Xverts[prv][4]:
                     self.Xverts[prv][4] = nxt
+                    prvStrand = 2
                 else:
                     raise Exception("Error in pruning: X-vertex error")
             else:
@@ -304,19 +314,45 @@ class Graph():
             elif nxt in self.Hverts:
                 if vert == self.Hverts[nxt][1]:
                     self.Hverts[nxt][1] = prv
+                    nxtStrand = 1
                 elif vert == self.Hverts[nxt][3]:
                     self.Hverts[nxt][3] = prv
+                    nxtStrand = 2
                 else:
                     raise Exception("Error in pruning: H-vertex error")
             elif nxt in self.Xverts:
                 if vert == self.Xverts[nxt][1]:
                     self.Xverts[nxt][1] = prv
+                    nxtStrand = 1
                 elif vert == self.Xverts[nxt][3]:
                     self.Xverts[nxt][3] = prv
+                    nxtStrand = 2
                 else:
                     raise Exception("Error in pruning: X-vertex error")
             else:
                 raise Exception("Error in pruning: nxt not found")
+
+        if prvStrand and nxtStrand: # Check that prvStrand and nxtStrand have
+                                    # been assigned values that are not None.
+            # Here, we add extra information to H- or X-vertex nxt to determine
+            # which strand of prv (1 or 2) connects to which strand of nxt
+            # (1 or 2). This is to eliminate ambiguity in the case that an H-
+            # or X-vertex is connected to another H- or X-vertex via 2 strands.
+            # We add a string of the form "x-y" where x,y in {1,2} to denote
+            # that the x strand of prv connects to the y strand of nxt.
+            # Note: it is sufficient to do this once, so we check that it hasn't
+            # been done before. Also note that this ambiguity only occurs after
+            # S-vertices have been pruned.
+            if nxt in self.Hverts:
+                if len(self.Hverts[nxt]) == 6:
+                    self.Hverts[nxt].append(str(prvStrand) +
+                                            "-" +
+                                            str(nxtStrand))
+            elif nxt in self.Xverts:
+                if len(self.Xverts[nxt]) == 6:
+                    self.Xverts[nxt].append(str(prvStrand) +
+                                            "-" +
+                                            str(nxtStrand))
 
     def _printHvert(self,v):
         """Print information about the given H-vertex."""
