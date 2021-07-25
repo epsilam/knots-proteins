@@ -1,5 +1,7 @@
 from src.proteingraph import *
 import sys
+from shutil import copyfile
+from datetime import datetime
 
 class ProteinGamma(ProteinGraph):
     def __init__(self, proteinName: str, angle1: float, angle2: float):
@@ -147,7 +149,7 @@ class ProteinGamma(ProteinGraph):
                 + str(strand1) + "," \
                 + str(strand2) + "," \
                 + str(mergeStrand) + "]"
-            sys.stdout.write(output)
+            return output
 
         if vType == 'X':
             if vTypeAnnot == '+':
@@ -155,19 +157,21 @@ class ProteinGamma(ProteinGraph):
                     + str(strand1) + "," \
                     + str(strand2) + "," \
                     + str(mergeStrand) + "]"
-                sys.stdout.write(output)
+                return output
             elif vTypeAnnot == '-':
                 output = " // Subscript[mXn," \
                     + str(strand1) + "," \
                     + str(strand2) + "," \
                     + str(mergeStrand) + "]"
-                sys.stdout.write(output)
-
+                return output
 
     def printGamma(self):
-        sys.stdout.write("(* ::Input:: *)\n")
-        sys.stdout.write("(*Subscript[II, s]")
-        gen = self.vertexSequence()
-        for v in gen:
-            self.formatVertexMerge(v)
-        sys.stdout.write("*)\n")
+        outputFileName = "gammaOutput-" + str(datetime.now()) + ".m"
+        copyfile("gamma.m", outputFileName)
+        with open(outputFileName, 'a') as file:
+            file.write("(* ::Input:: *)\n")
+            file.write("(*Subscript[II, s]")
+            gen = self.vertexSequence()
+            for v in gen:
+                file.write(self.formatVertexMerge(v))
+            file.write("*)\n")
