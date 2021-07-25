@@ -115,7 +115,7 @@ class ProteinProjection:
                           # tertiary structure of the protein
                           # (excludes peptide bonds)
     def findProteinStructureBonds(self):
-        self.p.inferBonds(max_bond=2*1.221)
+        self.p.inferBonds(max_bond=2*1.0)
         for bond in self.backbone.iterBonds():
             bondAtomPair = bond.getAtoms()
             r1 = bondAtomPair[0].getResnum()
