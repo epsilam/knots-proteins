@@ -4,8 +4,8 @@ from shutil import copyfile
 from datetime import datetime
 
 class ProteinGamma(ProteinGraph):
-    def __init__(self, proteinName: str, angle1: float, angle2: float):
-        ProteinGraph.__init__(self, proteinName, angle1, angle2)
+    def __init__(self, proteinName, planeNormal):
+        ProteinGraph.__init__(self, proteinName, planeNormal)
 
         self._labels = {} # dictionary containing labels for strands and
                          # H-contacts. Converts from the vertex IDs of the

@@ -9,7 +9,8 @@ class ProteinProjection:
                                          # plane onto which the protein is
                                          # projected. they are along the z-axis
                                          # and y-axis, respectively.
-    def __init__(self, proteinName: str, angle1: float, angle2: float):
+    def __init__(self, proteinName, planeNormal):
+        self.planeNormal = planeNormal / np.linalg.norm(planeNormal)
 
         self.p = pd.parsePDB(proteinName)
         self.backbone = self.p.select('protein') # removes irrelevant structures
@@ -27,19 +28,6 @@ class ProteinProjection:
                                      # number together with the 2d coordinates
                                      # of the residue projected onto the given
                                      # plane.
-        for i in self.resNums:
-            res = self.backbone['A',i]
-            self.resCoords[i] = np.average(res.getCoords(),axis=0)
-                                     # we rotate the residue coordinates by
-                                     # the two angles and then project onto
-                                     # the xy-plane.
-
-            M1 = expm(np.cross(np.eye(3),  # rotation matrix along z-axis
-                            np.array([0,0,1])*angle1))
-            M2 = expm(np.cross(np.eye(3),  # rotation matrix along y-axis
-                            np.array([0,1,0])*angle2))
-            rot = np.dot(M1,np.dot(M2,self.resCoords[i]))
-            self.projectedResCoords[i] = rot[0:2] # take the x,y coords
 
         self.backboneCrossings = {}      # a dictionary containing crossings of
                                          # bonds on the backbone. the key
@@ -73,27 +61,70 @@ class ProteinProjection:
                           # and resi2 crosses the bond between resj1 and resj2
                           # in a given projection using some
                           # simple linear algebra.
+        self.projectResCoords()
         self.findBackbonePrimaryCrossings()
         self.findProteinStructureBonds()
         self.findStructureCrossings()
         self.findStructureWithBackboneCrossings()
 
+    def projectResCoords(self):
+        """Project all residue coordinates onto the plane with normal specified
+        at init. Produces 2D coordinates by rotating the plane to the x,y-plane
+        and taking the first two coordinates of each point."""
+        t = np.transpose
+
+        n = self.planeNormal
+        z = np.array([0,0,1])           # z-axis
+        r = t(np.matrix(np.cross(n,z))) # rotation axis between n and z
+        a = np.arccos(np.dot(n,z))      # rotation angle between n and z
+
+        n = t(np.matrix(n))
+        z = t(np.matrix(z))
+        cpr = z * t(n) - n * t(z)       # cross product matrix of n and z
+        M = np.cos(a) * np.eye(3) + np.sin(a) * cpr + (1-np.cos(a)) * r * t(r)
+        for i in self.resNums:
+            res = self.backbone['A',i]
+            self.resCoords[i] = np.average(res.getCoords(),axis=0)
+            rc = self.resCoords[i]
+
+            # 3D coordinates of residue projected onto plane
+            proj = rc - n.A1 * np.dot(rc, n.A1) / np.dot(n.A1, n.A1)
+
+            # coordinates after rotating the plane to be perpendicular to z-axis
+            rotCoords = M * t(np.matrix(proj))
+            self.projectedResCoords[i] = rotCoords.A1[0:2]
+
+
     def _checkBondCrossing(self, resi1, resi2, resj1, resj2, crossingDict):
-        A = self.projectedResCoords[resi1]
-        B = self.projectedResCoords[resi2]
-        C = self.projectedResCoords[resj1]
-        D = self.projectedResCoords[resj2]
-        E = C - A
-        R = B - A
-        S = D - C
+        Ri1 = self.projectedResCoords[resi1]
+        Ri2 = self.projectedResCoords[resi2]
+        Rj1 = self.projectedResCoords[resj1]
+        Rj2 = self.projectedResCoords[resj2]
+        E = Rj1 - Ri1
+        R = Ri2 - Ri1
+        S = Rj2 - Rj1
         crossRS = np.cross(R,S)
         t = np.cross(E,S) / crossRS
         u = np.cross(E,R) / crossRS
+        n = self.planeNormal
         if crossRS != 0:
             if 0 <= t <= 1 and 0 <= u <= 1:
                 isPositive = (crossRS > 0)
-                crossingDict[(resi1,resi2,resj1,resj2)] = (A + t * R,
-                                                           isPositive)
+                Ri1_3D = self.resCoords[resi1]
+                Ri2_3D = self.resCoords[resi2]
+                Rj1_3D = self.resCoords[resj1]
+                Rj2_3D = self.resCoords[resj2]
+                x1 = Ri1_3D + t * (Ri2_3D - Ri1_3D) # 3D location of projected
+                x2 = Rj1_3D + u * (Rj2_3D - Rj1_3D) # crossing along each strand
+                # project x1 and x2 onto the plane normal. whichever projection
+                # has the greater norm will be the over strand
+                x1p = np.dot(x1, n) / np.dot(n, n)
+                x2p = np.dot(x2, n) / np.dot(n, n)
+                if x1p >= x2p:
+                    resPairs = (resi1, resi2, resj1, resj2)
+                else:
+                    resPairs = (resj1, resj2, resi1, resi2)
+                crossingDict[resPairs] = (Ri1 + t * R, isPositive)
         else:
             raise Exception("Bonds appear tangent in projection.\
             Use different projection.")

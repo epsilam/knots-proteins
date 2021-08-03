@@ -4,10 +4,10 @@ from collections import OrderedDict
 import src.proteinprojection as proproj
 
 class ProteinGraph(Graph):
-    def __init__(self, proteinName: str, angle1: float, angle2: float):
+    def __init__(self, proteinName, planeNormal):
         Graph.__init__(self)
         print("Parsing PDB file...")
-        self.ProProj = proproj.ProteinProjection(proteinName, angle1, angle2)
+        self.ProProj = proproj.ProteinProjection(proteinName, planeNormal)
         print("PDB file parsed.")
         self.initialVerts = {} # dictionary to keep track of S-vertices
                                # representing actual residues.
