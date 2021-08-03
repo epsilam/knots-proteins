@@ -18,7 +18,7 @@
 (*Subscript[i, i_]:=\[CapitalGamma][1, Subscript[r, i] Subscript[c, i]]*)
 (*Subscript[X, a_,b_]:=\[CapitalGamma][1,Subscript[r, a] Subscript[c, a]+(1-t) Subscript[r, a] Subscript[c, b]+t Subscript[r, b] Subscript[c, b]]*)
 (*Subscript[\!\(\*OverscriptBox[\(X\), \(_\)]\), a_,b_]:=Subscript[X, a,b]/. t->1/t*)
-(*Subscript[H, a_,b_]:= \[CapitalGamma][1,t Subscript[r, a]c_a + (1-t)Subscript[r, a] Subscript[c, b] + (1-t)Subscript[r, b] Subscript[c, a] + Subscript[tr, b] Subscript[c, b]]*)
+(*Subscript[H, a_,b_]:= \[CapitalGamma][1,t Subscript[r, a] Subscript[c, a] + (1-t)Subscript[r, a] Subscript[c, b] + (1-t)Subscript[r, b] Subscript[c, a] + t Subscript[r, b] Subscript[c, b]]*)
 (*Subscript[m, a_,b_->k_][\[CapitalGamma][\[Omega]_,A_]]:=\[CapitalGamma]Collect[\[CapitalGamma][\[Omega] (1-\!\( *)
 (*\*SubscriptBox[\(\[PartialD]\), *)
 (*SubscriptBox[\(r\), \(a\)]]\( *)
