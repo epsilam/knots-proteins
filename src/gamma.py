@@ -134,7 +134,7 @@ class ProteinGamma(ProteinGraph):
             ret = (*vType, sID1, sID2)
             yield [*ret,ret[1+strandNum]]
 
-    def formatVertexMerge(self, vertexmergelist):
+    def formatVertexMerge(self, vertexmergelist, seenStrandPairs):
         """Takes the output of vertexSequence and prints formatted Mathematica
         code to stdout."""
         vType = vertexmergelist[0]
@@ -143,35 +143,41 @@ class ProteinGamma(ProteinGraph):
         strand2 = vertexmergelist[3]
         mergeStrand = vertexmergelist[4]
 
-        if vType == 'H':
-            output = " // Subscript[mH," \
-                + str(vTypeAnnot) + "," \
-                + str(strand1) + "," \
-                + str(strand2) + "," \
-                + str(mergeStrand) + "]"
-            return output
+        if (strand1,strand2) not in seenStrandPairs:
+            seenStrandPairs.add((strand1,strand2))
+            if vType == 'H':
+                output = " // Subscript[mH," \
+                    + str(strand1) + "," \
+                    + str(strand2) + "," \
+                    + str(mergeStrand) + "]"
+                return output
 
-        if vType == 'X':
-            if vTypeAnnot == '+':
-                output = " // Subscript[mXp," \
-                    + str(strand1) + "," \
-                    + str(strand2) + "," \
-                    + str(mergeStrand) + "]"
-                return output
-            elif vTypeAnnot == '-':
-                output = " // Subscript[mXn," \
-                    + str(strand1) + "," \
-                    + str(strand2) + "," \
-                    + str(mergeStrand) + "]"
-                return output
+            if vType == 'X':
+                if vTypeAnnot == '+':
+                    output = " // Subscript[mXp," \
+                        + str(strand1) + "," \
+                        + str(strand2) + "," \
+                        + str(mergeStrand) + "]"
+                    return output
+                elif vTypeAnnot == '-':
+                    output = " // Subscript[mXn," \
+                        + str(strand1) + "," \
+                        + str(strand2) + "," \
+                        + str(mergeStrand) + "]"
+        else: # case that the vertex has not been seen
+            output = " // Subscript[m, s, " + str(mergeStrand) + " -> s]"
+        return output
 
     def printGamma(self):
+        seenStrandPairs = set() # to avoid adding vertices twice, we keep track
+                                # of previously seen pairs of strands.
+
         outputFileName = "gammaOutput-" + str(datetime.now()) + ".m"
         copyfile("gamma.m", outputFileName)
         with open(outputFileName, 'a') as file:
             file.write("(* ::Input:: *)\n")
-            file.write("(*Subscript[II, s]")
+            file.write("(*Subscript[i, s]")
             gen = self.vertexSequence()
             for v in gen:
-                file.write(self.formatVertexMerge(v))
+                file.write(self.formatVertexMerge(v, seenStrandPairs))
             file.write("*)\n")
