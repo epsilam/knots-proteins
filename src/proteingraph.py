@@ -6,35 +6,28 @@ import src.proteinprojection as proproj
 class ProteinGraph(Graph):
     def __init__(self, proteinName, planeNormal):
         Graph.__init__(self)
-        print("Parsing PDB file...")
         self.ProProj = proproj.ProteinProjection(proteinName, planeNormal)
-        print("PDB file parsed.")
         self.initialVerts = {} # dictionary to keep track of S-vertices
                                # representing actual residues.
+        print("Creating graph structure...")
         self.resolve()
-        print("Done.")
 
 
     def resolve(self):
         """Create the entire graph corresponding to the given protein,
         resolving all H-bonds and crossings."""
-        print("Creating vertices for each residue...")
         self.initResVerts()
 
         resNums = self.ProProj.resNums
-        print("Creating H-vertices...")
         for res in resNums[:-1]:
             self.resolveHverts(res)
 
-        print("Resolving crossings along backbone...")
         for res in resNums[:-1]:
             self.resolveXvertsBB(res)
 
-        print("Resolving crossings along H-bonds...")
         for (res1,res2) in self.ProProj.proteinStructureBonds:
             self.resolveXvertsHbond(res1,res2)
 
-        print("Pruning unnecessary vertices...")
         for vert in list(self.Sverts)[1:]: # we prune all S-vertices except the
             self._pruneSvert(vert)         # initial vertex.
 

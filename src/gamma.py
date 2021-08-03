@@ -172,8 +172,12 @@ class ProteinGamma(ProteinGraph):
         seenStrandPairs = set() # to avoid adding vertices twice, we keep track
                                 # of previously seen pairs of strands.
 
-        outputFileName = "gammaOutput-" + str(datetime.now()) + ".m"
-        copyfile("gamma.m", outputFileName)
+        outputFileName = "gammaOutput-" + str(datetime.now()) + ".wls"
+
+        print("Creating Wolfram Language Script: outputting to " \
+              + outputFileName)
+
+        copyfile("gamma.wls", outputFileName)
         with open(outputFileName, 'a') as file:
             file.write("(* ::Input:: *)\n")
             file.write("(*Subscript[i, s]")

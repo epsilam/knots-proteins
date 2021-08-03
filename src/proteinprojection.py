@@ -12,7 +12,9 @@ class ProteinProjection:
     def __init__(self, proteinName, planeNormal):
         self.planeNormal = planeNormal / np.linalg.norm(planeNormal)
 
+        print("Attempting to find or download PDB file...")
         self.p = pd.parsePDB(proteinName)
+        print("Parsing PDB file...")
         self.backbone = self.p.select('protein') # removes irrelevant structures
                                             # (such as water molecules,
                                             # carbohydrates, and ligands) and
