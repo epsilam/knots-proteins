@@ -111,7 +111,6 @@ class ProteinProjection:
         n = self.planeNormal
         if crossRS != 0:
             if 0 <= t <= 1 and 0 <= u <= 1:
-                isPositive = (crossRS > 0)
                 Ri1_3D = self.resCoords[resi1]
                 Ri2_3D = self.resCoords[resi2]
                 Rj1_3D = self.resCoords[resj1]
@@ -123,8 +122,10 @@ class ProteinProjection:
                 x1p = np.dot(x1, n) / np.dot(n, n)
                 x2p = np.dot(x2, n) / np.dot(n, n)
                 if x1p >= x2p:
+                    isPositive = (crossRS > 0)
                     resPairs = (resi1, resi2, resj1, resj2)
                 else:
+                    isPositive = not (crossRS > 0)
                     resPairs = (resj1, resj2, resi1, resi2)
                 crossingDict[resPairs] = (Ri1 + t * R, isPositive)
         else:
@@ -148,11 +149,14 @@ class ProteinProjection:
                           # tertiary structure of the protein
                           # (excludes peptide bonds)
     def findProteinStructureBonds(self):
-        self.p.inferBonds(max_bond=2*1.0)
-        for bond in self.backbone.iterBonds():
-            bondAtomPair = bond.getAtoms()
-            r1 = bondAtomPair[0].getResnum()
-            r2 = bondAtomPair[1].getResnum()
+        maxRadius = 2 * 1.221
+        self.p.inferBonds(max_bond = maxRadius)
+        for bondCandidate in self.backbone.iterBonds():
+            bondAtomPair = bondCandidate.getAtoms()
+            a1 = bondAtomPair[0]
+            a2 = bondAtomPair[1]
+            r1 = a1.getResnum()
+            r2 = a2.getResnum()
             if r1 != r2 and r1 != r2 + 1 and r1 != r2 - 1:
                 if r2 < r1: # to ensure no duplicates, force r1 < r2
                     temp = r1; r1 = r2; r2 = temp

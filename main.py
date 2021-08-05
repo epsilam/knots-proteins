@@ -1,5 +1,5 @@
 from src.gamma import *
 
-P = ProteinGamma('1L2Y', np.array([5,1,1]))
+P = ProteinGamma('1R02', np.array([1,-1,1]))
 P.ProProj.plotCrossings()
 P.printGamma()
