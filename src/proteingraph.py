@@ -11,7 +11,13 @@ class ProteinGraph(Graph):
                                # representing actual residues.
         print("Creating graph structure...")
         self.resolve()
-
+        print("Number of H-contacts:     " + str(len(self.Hverts)))
+        print("Number of real crossings: " \
+              + str(  len(self.ProProj.backboneCrossings) \
+                    + len(self.ProProj.structureWithBackboneCrossings) \
+                    + len(self.ProProj.structureCrossings)))
+        print("Number of vertices:       " + str(  len(self.Hverts) \
+                                                 + len(self.Xverts)))
 
     def resolve(self):
         """Create the entire graph corresponding to the given protein,
