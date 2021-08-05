@@ -3,4 +3,5 @@ Run `main.py` with Python 3, and a Wolfram Language Script will be automatically
 To configure, set the variable `PROTEIN_NAME` in `main.py` to the desired protein name as found on the [Protein Data Bank](https://www.rcsb.org/).
 Note: this program is only designed to work for proteins consisting of a single polypeptide chain.
 
-![Screenshot_20210603_065402](https://user-images.githubusercontent.com/38050380/120589058-91e74e80-c438-11eb-8907-c9f71bd2f2b5.png)
+![protein-1R02-graph](https://user-images.githubusercontent.com/38050380/128295577-9e542f78-b4a2-4f04-a6c4-53b3bd1e6157.png)
+
