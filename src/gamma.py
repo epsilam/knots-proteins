@@ -5,6 +5,7 @@ from datetime import datetime
 
 class ProteinGamma(ProteinGraph):
     def __init__(self, proteinName, planeNormal):
+        print("Protein name: " + proteinName)
         ProteinGraph.__init__(self, proteinName, planeNormal)
 
         self._labels = {} # dictionary containing labels for strands and
