@@ -6,6 +6,7 @@ from datetime import datetime
 class ProteinGamma(ProteinGraph):
     def __init__(self, proteinName, planeNormal):
         print("Protein name: " + proteinName)
+        self.proteinName = proteinName
         ProteinGraph.__init__(self, proteinName, planeNormal)
 
         self._labels = {} # dictionary containing labels for strands and
@@ -173,7 +174,11 @@ class ProteinGamma(ProteinGraph):
         seenStrandPairs = set() # to avoid adding vertices twice, we keep track
                                 # of previously seen pairs of strands.
 
-        outputFileName = "gammaOutput-" + str(datetime.now()) + ".wls"
+        outputFileName = "gamma_" \
+                        + self.proteinName \
+                        + "_" \
+                        + str(datetime.now()) \
+                        + ".wls"
 
         print("Creating Wolfram Language Script: outputting to " \
               + outputFileName)
