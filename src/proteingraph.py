@@ -11,6 +11,8 @@ class ProteinGraph(Graph):
                                # representing actual residues.
         print("Creating graph structure...")
         self.resolve()
+        print("Number of atoms:          " + str(self.ProProj.p.numAtoms()))
+        print("Number of residues:       " + str(self.ProProj.p.numResidues()))
         print("Number of H-contacts:     " + str(len(self.Hverts)))
         print("Number of real crossings: " \
               + str(  len(self.ProProj.backboneCrossings) \
