@@ -1,5 +1,7 @@
 ### Description
-Given a protein consisting of a single polypeptide chain available on the [Protein Data Bank](https://www.rcsb.org/), creates an H-tangle diagram of the protein and computes a polynomial invariant (single-strand Gamma) of this diagram.
+This script was developed for my bachelor thesis in mathematics.
+
+Given a protein consisting of a single polypeptide chain available on the [Protein Data Bank](https://www.rcsb.org/), this script creates an H-tangle diagram of the protein and computes a polynomial invariant (single-strand Gamma) of this diagram.
 
 ### Usage
 Run `main.py` with Python 3, and a Wolfram Language Script containing the data of the H-tangle diagram will be automatically generated in the same directory. This script may be evaluated with Mathematica to produce the Gamma polynomial of the protein.
